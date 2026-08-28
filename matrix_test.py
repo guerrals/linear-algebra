@@ -2,7 +2,7 @@ from matrix import Matrix
 
 # ==========================================
 # 🛠️ JEST-LIKE TESTING MINI-FRAMEWORK
-# ==========================================j
+# ==========================================
 
 class TestRunner:
     def __init__(self):
@@ -232,14 +232,30 @@ def run_all_tests():
             expect(solution).to_equal([1.0, 3.0])
         it("should return the correct unique solution for a valid system (SPD)", _unique_solution)
 
-        def _inconsistent_system():
-            # Sistema impossível (linhas paralelas que nunca se cruzam):
-            # x + y = 2
-            # x + y = 3
-            A = Matrix([[1, 1], [1, 1]])
-            B = Matrix([[2], [3]])
-            expect(lambda: A.solve(B)).to_throw(ValueError)
-        it("should throw ValueError for an inconsistent system (SI - No solution)", _inconsistent_system)
+        def _inconsistent_system_fallback():
+            # Sistema de Regressão Linear: 3 pontos, 2 variáveis.
+            # Matriz A (Tamanho, Intercepto) e B (Preços)
+            A = Matrix([
+                [1, 1], 
+                [2, 1], 
+                [3, 1]
+            ])
+            B = Matrix([
+                [2], 
+                [3], 
+                [5]
+            ])
+            
+            # Como não há reta perfeita, o solve() aciona o fallback para least_squares
+            # O solve() desempacota e retorna uma lista: [1.5, 0.33333...]
+            result = A.solve(B)
+            
+            # Arredondamos o resultado para 4 casas para o teste bater perfeitamente
+            rounded_result = [round(val, 4) for val in result]
+            expected = [1.5, 0.3333]
+            
+            expect(rounded_result).to_equal(expected)
+        it("should fallback to least squares and return approximation for inconsistent systems", _inconsistent_system_fallback)
 
         def _infinite_solutions():
             # Sistema indeterminado (mesma linha sobreposta):
@@ -291,6 +307,106 @@ def run_all_tests():
 
     describe("Inverse Matrix (.inverse)", test_inverse)
 
+    def test_least_squares():
+        # Função auxiliar para arredondar dízimas (como 0.333333...)
+        def round_data(data, decimals=4):
+            return [[round(val, decimals) for val in row] for row in data]
+
+        def _perfect_fit():
+            # Pontos perfeitamente alinhados: (1, 2), (2, 4), (3, 6)
+            # A equação exata dessa reta é y = 2x + 0 (m=2, b=0)
+            A = Matrix([
+                [1, 1], 
+                [2, 1], 
+                [3, 1]
+            ])
+            B = Matrix([
+                [2], 
+                [4], 
+                [6]
+            ])
+            
+            result = A.least_squares(B)
+            
+            expected = [[2.0], [0.0]]
+            expect(round_data(result.data)).to_equal(expected)
+        it("should find the exact line for perfectly aligned points", _perfect_fit)
+
+        def _best_fit():
+            # Pontos espalhados: (1, 2), (2, 3), (3, 5)
+            # A melhor reta aproximada matematicamente é y = 1.5x + 0.3333
+            A = Matrix([
+                [1, 1], 
+                [2, 1], 
+                [3, 1]
+            ])
+            B = Matrix([
+                [2], 
+                [3], 
+                [5]
+            ])
+            
+            result = A.least_squares(B)
+            
+            expected = [[1.5], [0.3333]]
+            expect(round_data(result.data, 4)).to_equal(expected)
+        it("should find the best fit line for scattered points", _best_fit)
+
+    describe("Least Squares (Linear Regression)", test_least_squares)
+
+    def test_transformations():
+        def _rotate_90_degrees():
+            # Ponto em (1, 0)
+            P = Matrix([[1], [0]])
+            # Matriz de rotação de 90 graus
+            R = Matrix.rotation_2d(90)
+            
+            # Rotacionando: R @ P
+            result = R @ P
+            
+            # O ponto (1, 0) girado 90 graus vira (0, 1)
+            # O Python pode retornar 0.0 e 1.0 devido à conversão de floats
+            expected = [[0.0], [1.0]]
+            expect(result.data).to_equal(expected)
+        it("should rotate a single point 90 degrees correctly", _rotate_90_degrees)
+
+        def _rotate_180_degrees():
+            # Ponto em (1, 0)
+            P = Matrix([[1], [0]])
+            # Matriz de rotação de 180 graus
+            R = Matrix.rotation_2d(180)
+            
+            result = R @ P
+            
+            # O ponto (1, 0) girado 180 graus vira (-1, 0)
+            expected = [[-1.0], [0.0]]
+            expect(result.data).to_equal(expected)
+        it("should rotate a single point 180 degrees correctly", _rotate_180_degrees)
+
+        def _rotate_shape():
+            # Para rotacionar um triângulo (ou qualquer forma 2D), colocamos 
+            # os pontos como colunas da matriz.
+            # Pontos do triângulo: A(1, 0), B(0, 1), C(0, 0)
+            triangle = Matrix([
+                [1, 0, 0],  # Eixo X
+                [0, 1, 0]   # Eixo Y
+            ])
+            
+            R = Matrix.rotation_2d(90)
+            
+            # A mágica da Álgebra Linear: multiplicamos a matriz de rotação 
+            # pela matriz de pontos, e TODOS os pontos giram simultaneamente!
+            rotated_triangle = R @ triangle
+            
+            # Novos pontos esperados: A'(0, 1), B'(-1, 0), C'(0, 0)
+            expected = [
+                [0.0, -1.0, 0.0],
+                [1.0,  0.0, 0.0]
+            ]
+            expect(rotated_triangle.data).to_equal(expected)
+        it("should rotate multiple points of a shape simultaneously", _rotate_shape)
+
+    describe("Geometric Transformations (2D)", test_transformations)
     # Finally, print the beautiful summary
     runner.print_summary()
 

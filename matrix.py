@@ -382,8 +382,14 @@ class Matrix:
             for column_index in range(self.cols):
                 if abs(reduced_matrix.data[row_index][column_index]) > 1e-7:
                     all_zeros = False
-            if all_zeros and constant != 0:
-                raise ValueError("System is Inconsistent (No solution)")
+
+            if all_zeros and abs(constant) > 1e-7:
+                print("System is Inconsistent (No solution). Using least squares to find approximate solution.")
+                regression_vector = self.least_squares(constants)
+                approximated_solutions = []
+                for approximated_solution in regression_vector:
+                    approximated_solutions.append(round(approximated_solution, 2))
+                return approximated_solutions
             elif not all_zeros:
                 non_zero_rows += 1
 
@@ -423,8 +429,21 @@ class Matrix:
         for row_index in range(reduced_matrix.rows):
             right_side_matrix_row = []
             for column_index in range(self.cols, reduced_matrix.cols):
-                right_side_matrix_row.append(round(reduced_matrix.data[row_index][column_index], 2))
+                right_side_matrix_row.append(reduced_matrix.data[row_index][column_index])
             inverse_data.append(right_side_matrix_row)
 
         inverse_matrix = Matrix(inverse_data)
         return inverse_matrix
+
+    def least_squares(self, constants):
+        """
+        [MATH ON PAPER]: Regressão Linear / Mínimos Quadrados.
+        Fórmula: X = (A^T * A)^-1 * A^T * B
+        Usado para encontrar a melhor aproximação para sistemas impossíveis (mais equações que variáveis).
+        """
+        transposed = self.transpose()
+        transposed_self = transposed @ self
+        inversed_transposed_self = transposed_self.inverse()
+        transposed_constants = transposed @ constants
+        regression_vector = inversed_transposed_self @ transposed_constants
+        return regression_vector
