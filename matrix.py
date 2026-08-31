@@ -1,4 +1,5 @@
 import random
+import math
 
 class Matrix:
     def __init__(self, data):
@@ -75,6 +76,60 @@ class Matrix:
             matrix_data.append(row)
 
         return cls(matrix_data)
+
+    @staticmethod
+    def rotation_2d(angle_degrees):
+        """
+        [MATH ON PAPER]: Matriz de Rotação 2D.
+        Gera a matriz capaz de rotacionar pontos em um determinado ângulo.
+        """
+        rad = math.radians(angle_degrees)
+        cos = round(math.cos(rad), 5)
+        sin = round(math.sin(rad), 5)
+        return Matrix([
+            [cos, -sin],
+            [sin,  cos]
+        ])
+
+    @staticmethod
+    def is_linearly_independent(vectors):
+        """
+        [MATH ON PAPER]: Independência Linear (LI vs LD).
+        Recebe uma lista de vetores (onde cada vetor é uma lista ou Matrix coluna).
+        Retorna True se forem LI, False se forem LD.
+        """
+        if not vectors:
+            raise ValueError("A lista de vetores não pode estar vazia.")
+
+        num_vectors = len(vectors)
+        vector_dim = len(vectors[0])
+
+        # Monta a matriz colocando os vetores como COLUNAS
+        # Matriz de dimensões (vector_dim x num_vectors)
+        matrix_data = []
+        for r in range(vector_dim):
+            row = [vectors[c][r] for c in range(num_vectors)]
+            matrix_data.append(row)
+
+        A = Matrix(matrix_data)
+        
+        # É LI se o posto for exatamente igual ao número de vetores
+        return A.rank() == num_vectors
+
+    def rank(self):
+        """
+        [MATH ON PAPER]: Posto de uma Matriz.
+        Calcula o número de linhas não nulas na forma RREF.
+        """
+        reduced = self.rref()
+        non_zero_rows = 0
+        
+        for row in reduced.data:
+            # Verifica se há pelo menos um elemento diferente de zero na linha
+            if any(abs(val) > 1e-7 for val in row):
+                non_zero_rows += 1
+                
+        return non_zero_rows
 
     def _get_submatrix(self, row, column):
         """
@@ -385,10 +440,10 @@ class Matrix:
 
             if all_zeros and abs(constant) > 1e-7:
                 print("System is Inconsistent (No solution). Using least squares to find approximate solution.")
-                regression_vector = self.least_squares(constants)
+                regression_matrix = self.least_squares(constants)
                 approximated_solutions = []
-                for approximated_solution in regression_vector:
-                    approximated_solutions.append(round(approximated_solution, 2))
+                for approximated_solution in regression_matrix.data:
+                    approximated_solutions.append(round(approximated_solution[0], 2))
                 return approximated_solutions
             elif not all_zeros:
                 non_zero_rows += 1

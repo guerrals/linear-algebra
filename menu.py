@@ -18,7 +18,6 @@ def display_menu():
     print("12. Reduced Row Echelon Form (RREF)")
     print("13. Solve Linear System (Ax = B)")
     print("14. Inverse Matrix (A^-1)")
-    print("15. Visualize 2D Linear System (Graph)")
     print("0. Exit")
     print("="*35)
 
