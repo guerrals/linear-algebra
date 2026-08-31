@@ -502,3 +502,45 @@ class Matrix:
         transposed_constants = transposed @ constants
         regression_vector = inversed_transposed_self @ transposed_constants
         return regression_vector
+
+    def column_space(self):
+        """
+        [MATEMÁTICA]: Espaço Coluna (Column Space).
+        O espaço coluna de uma matriz A é o subespaço gerado por suas colunas. 
+        Para encontrar uma base para o espaço coluna:
+        1. Calculamos a RREF da matriz para identificar onde estão as colunas pivô.
+        2. As colunas da matriz RREF que possuem pivôs indicam quais são as 
+           colunas ORIGINAIS de A que formam a base do espaço coluna.
+           
+        [PASSO A PASSO PARA IMPLEMENTAR]:
+        1. Obtenha a matriz RREF chamando self.rref().
+        2. Percorra as colunas da RREF da esquerda para a direita.
+        3. Identifique quais colunas possuem um pivô (geralmente o primeiro elemento 
+           não nulo de uma linha escalonada, respeitando a tolerância de 1e-7).
+        4. Para cada índice de coluna pivô encontrado, extraia a coluna CORRESPONDENTE 
+           da matriz ORIGINAL (self).
+        5. Retorne uma lista contendo esses vetores (ou uma nova Matrix formada por essas colunas).
+        """
+        # TODO: Implementar a extração das colunas pivô baseadas na RREF
+        raise NotImplementedError("Método column_space ainda não implementado.")
+
+    def null_space(self):
+        """
+        [MATEMÁTICA]: Espaço Nulo ou Núcleo (Null Space / Kernel).
+        O espaço nulo consiste em todas as soluções do sistema homogêneo Ax = 0.
+        Para encontrá-lo:
+        1. Aplica-se a RREF na matriz aumentada com zeros [A | 0].
+        2. Identificam-se as colunas com pivô (variáveis básicas) e as sem pivô (variáveis livres).
+        3. Expressam-se as variáveis básicas em função das variáveis livres, gerando 
+           os vetores que compõem a base do núcleo.
+           
+        [PASSO A PASSO PARA IMPLEMENTAR]:
+        1. Obtenha a RREF da matriz.
+        2. Mapeie quais colunas são variáveis básicas (têm pivô) e quais são livres.
+        3. Se não houver variáveis livres (apenas solução trivial x = 0), retorne um vetor nulo.
+        4. Para cada variável livre, atribua o valor 1 para ela e 0 para as outras livres, 
+           resolvendo o sistema linear resultante para encontrar os componentes dos vetores base.
+        5. Retorne a lista de vetores que formam a base do espaço nulo.
+        """
+        # TODO: Implementar o cálculo das soluções do sistema homogêneo Ax = 0
+        raise NotImplementedError("Método null_space ainda não implementado.")
